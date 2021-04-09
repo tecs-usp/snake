@@ -44,11 +44,20 @@ def desenhar_jogador():
 def keyPressed():
     """Função especial que é executada TODA vez que alguma tecla é pressionada. (Mesmo que ela não vá fazer nada!)"""
     global estado
+    global pausado ###
+    global quadros_ate_mover ###
     
-    if key == " ": # espaço
+    if key == "q": ### pra ficar mais facil de fechar a janela
+        exit()
+    if key == "s": ### slow; alterna entre 1x e 0.1x
+        quadros_ate_mover = 60/ (1+ 9*(quadrosatemover==60))
+    if key == " ": #espaço
         if estado == "inicio" or estado == "fim":
             estado = "jogando"
-            
+        elif estado == "jogando": ###
+            pausado = not pausado
+            debug_info()
+
     # Dá pra tirar o if key==CODED e deixar tudo junto, mas ainda vai ter que usar o keyCode em vez do key para essas teclas.
     if key == CODED:
         # Verificação de direção da cabeça para evitar que a pessoa perca por andar para trás.
@@ -174,7 +183,7 @@ def setup():
     """Função especial para preparar o início do jogo. 
     Ela é executada assim que iniciamos o programa."""
     
-    global estado
+    global estado, pausado
     
     size(900, 900)
     noCursor()
@@ -184,6 +193,7 @@ def setup():
     iniciar_cabeca()
     criar_comida()
     estado = "inicio"
+    pausado = False
 
 def draw():
     """Função especial que é a função central do programa. 
@@ -193,7 +203,7 @@ def draw():
     
     if estado == "inicio":
         tela_de_inicio()
-    if estado == "jogando":
+    if estado == "jogando" and pausado == False: ###
         principal()
     if estado == "fim":
         fim_de_jogo()
@@ -203,11 +213,30 @@ def pode_mover():
     quadroatual = frameCount
     resposta = (quadroatual % quadros_ate_mover == 0)
     return resposta
+
+def coords(): ###
+    fill(color(255))
+    textSize(20)
+    text("comida: ({0:^3}, {1:^3})".format(comida.x,comida.y), 100, 15)
+    text("jogador: ({0:^3}, {1:^3})".format(cabeca.x,cabeca.y), 350, 15)
+
+def debug_info():
+    ### Acho que está tudo ok?
+    print("frame:",frameCount)
+    print("comida:", "({0:^5},{1:^5})".format(comida.x, comida.y))
+    print("cobra:")
+    for i in range(len(cobra)):
+        print("\t", i, ":", "({0:^5},{1:^5},{2:^3})".format(cobra[i].x, cobra[i].y, cobra[i].dir), sep="", end="")
+        flechatalvez = (i==0)*" <---------- ponta da cauda" + (i==len(cobra)-1)*" <---------- cabeca"
+        print(flechatalvez)
+    print("ultimo segmento eh a cabeca?", "NAAAAO "*(cabeca!=cobra[-1]) +"eh!")
+    print(id(cabeca),id(cobra[-1]))
     
 def principal():
     """Instruções principais do jogo que são re-executadas continuamente."""
     desenhar_jogador()
     desenhar_comida()
+    coords()
     
     if pode_mover():
         mover_jogador()
